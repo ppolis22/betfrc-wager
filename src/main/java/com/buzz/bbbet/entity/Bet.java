@@ -13,8 +13,7 @@ public class Bet {
     @OneToMany(mappedBy = "parent")
     private Set<Leg> legs;
 
-    @ManyToOne
-    private BetType type;
+    private String type;
 
     private String userId;
 
@@ -22,7 +21,7 @@ public class Bet {
 
     public Bet() { }
 
-    public Bet(String id, Set<Leg> legs, BetType type, String userId, double amount) {
+    public Bet(String id, Set<Leg> legs, String type, String userId, double amount) {
         this.id = id;
         this.legs = legs;
         this.type = type;
@@ -46,11 +45,11 @@ public class Bet {
         this.legs = legs;
     }
 
-    public BetType getType() {
+    public String getType() {
         return type;
     }
 
-    public void setType(BetType type) {
+    public void setType(String type) {
         this.type = type;
     }
 
