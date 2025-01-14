@@ -4,8 +4,20 @@ public class Prop {
     private String id;
 
     private String parentId;
+    private String parentType;
+    // propType?
     private String propValue;
     private Integer odds;
+
+    public Prop() { }
+
+    public Prop(String id, String parentId, String parentType, String propValue, Integer odds) {
+        this.id = id;
+        this.parentId = parentId;
+        this.parentType = parentType;
+        this.propValue = propValue;
+        this.odds = odds;
+    }
 
     public String getId() {
         return id;
@@ -37,5 +49,13 @@ public class Prop {
 
     public void setOdds(Integer odds) {
         this.odds = odds;
+    }
+
+    public String getParentType() {
+        return parentType;
+    }
+
+    public void setParentType(String parentType) {
+        this.parentType = parentType;
     }
 }

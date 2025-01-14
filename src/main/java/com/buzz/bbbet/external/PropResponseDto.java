@@ -6,8 +6,7 @@ public class PropResponseDto {
     private List<Prop> props;
     private List<String> missingIds;
 
-    public PropResponseDto() {
-    }
+    public PropResponseDto() { }
 
     public PropResponseDto(List<Prop> props, List<String> missingIds) {
         this.props = props;

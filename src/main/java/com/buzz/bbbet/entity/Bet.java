@@ -14,19 +14,17 @@ public class Bet {
     private Set<Leg> legs;
 
     private String type;
-
     private String userId;
-
-    private double amount;  // better type for money?
+    private double wager;  // better type for money?
 
     public Bet() { }
 
-    public Bet(String id, Set<Leg> legs, String type, String userId, double amount) {
+    public Bet(String id, Set<Leg> legs, String type, String userId, double wager) {
         this.id = id;
         this.legs = legs;
         this.type = type;
         this.userId = userId;
-        this.amount = amount;
+        this.wager = wager;
     }
 
     public String getId() {
@@ -61,11 +59,11 @@ public class Bet {
         this.userId = userId;
     }
 
-    public double getAmount() {
-        return amount;
+    public double getWager() {
+        return wager;
     }
 
-    public void setAmount(double amount) {
-        this.amount = amount;
+    public void setWager(double wager) {
+        this.wager = wager;
     }
 }

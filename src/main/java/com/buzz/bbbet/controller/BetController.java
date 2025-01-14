@@ -1,18 +1,22 @@
 package com.buzz.bbbet.controller;
 
-import com.buzz.bbbet.dto.BetslipDto;
+import com.buzz.bbbet.dto.BetSlipPlaceDto;
+import com.buzz.bbbet.dto.BetSlipPostDto;
+import com.buzz.bbbet.dto.BetSlipPostResponseDto;
+import com.buzz.bbbet.dto.Wager;
 import com.buzz.bbbet.entity.Bet;
+import com.buzz.bbbet.entity.BetSlipPick;
+import com.buzz.bbbet.entity.Leg;
+import com.buzz.bbbet.external.Prop;
 import com.buzz.bbbet.external.PropQueryDto;
 import com.buzz.bbbet.external.PropResponseDto;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.buzz.bbbet.service.BetService;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -25,41 +29,148 @@ public class BetController {
 
     private final static ConcurrentHashMap<String, Lock> locks = new ConcurrentHashMap<>();
 
-    /*
-     * TODO convert to submitBetslip() where logged in user's betslip is looked up
-     */
-    @PostMapping
-    public ResponseEntity<Bet> postBet(@RequestBody BetslipDto betslip) {
-        String userId = "";
+    private final BetService betService;
+
+    // TODO move method logic into BetService
+
+    public BetController(BetService betService) {
+        this.betService = betService;
+    }
+
+    @PostMapping("/submit")
+    public ResponseEntity<Bet> postBet(@RequestBody BetSlipPlaceDto wagers) {
+        String userId = "1";
 
         // get lock on userId
         Lock lock = locks.computeIfAbsent(userId, k -> new ReentrantLock());
         try {
             lock.lock();
 
+            // verify all picks in betslip have a wager (straight or parlay)
+            List<BetSlipPick> betSlipPicks = betService.getBetSlipPicks(userId);
+            // TODO
+
             // get current odds from events service (set up cache layer?)
-            List<String> propIds = betslip.getBets().stream()
-                    .flatMap(bet -> bet.getLegs().stream())
-                    .flatMap(leg -> Stream.of(leg.getPropId()))
+            List<String> propIds = betSlipPicks.stream()
+                    .flatMap(pick -> Stream.of(pick.getPropId()))
                     .collect(Collectors.toList());
 
-            PropQueryDto query = new PropQueryDto(propIds);
-            RestTemplate restTemplate = new RestTemplate();
+            Map<String, Prop> currentProps;
             try {
-                PropResponseDto response = restTemplate.postForObject(
-                        "http://localhost:8080/odds/query",
-                        query,
-                        PropResponseDto.class);
+                ResponseEntity<PropResponseDto> response = getCurrentOdds(propIds);
+                if (response.getStatusCode().is4xxClientError()) {
+                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                }
+                List<Prop> propsList = response.getBody().getProps();
+                currentProps = propsList.stream().collect(Collectors.toMap(
+                        Prop::getId,
+                        p -> p
+                ));
             } catch (RestClientException e) {
-                // TODO
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
             // confirm odds match
+            boolean upToDate = betSlipPicks.stream().allMatch(p -> {
+                Prop match = currentProps.get(p.getPropId());
+                if (match == null) return false;
+                return match.getOdds().equals(p.getAckOdds()) &&
+                        match.getPropValue().equals(p.getAckPropValue());
+            });
+
+            if (!upToDate) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
             // try to deduct funds from funds service
-            // write to bets db (or kafka queue), if fails refund funds
+            Double betTotal = wagers.getWagers().stream().mapToDouble(Wager::getAmount).sum();
+            // TODO assume it worked for now
+
+            // write to bets db (or later, kafka queue), if fails refund funds
+            for (Wager wager : wagers.getWagers()) {
+                if (wager.getAmount() > 0.0) {
+                    if (wager.isParlayWager()) {
+                        Bet createdBet = createBet(userId, wager, "PARLAY");
+                        currentProps.values().forEach(prop -> createLeg(prop, createdBet));
+                    } else {
+                        Bet createdBet = createBet(userId, wager, "STRAIGHT");
+                        createLeg(currentProps.get(wager.getPropId()), createdBet);
+                    }
+                }
+            }
+
+            // clear betslip
+            betService.clearBetSlip(userId);
         } finally {
             // release lock
             lock.unlock();
         }
+    }
+
+    @PostMapping("/betslip")
+    public ResponseEntity<BetSlipPostResponseDto> addToBetslip(@RequestBody BetSlipPostDto newPick) {
+        String userId = "1";
+
+        // get lock on userId
+        Lock lock = locks.computeIfAbsent(userId, k -> new ReentrantLock());
+        try {
+            lock.lock();
+
+            // add incoming pick to betslip
+            betService.savePickToBetSlip(
+                    userId, newPick.getPropId(), newPick.getPropValue(), newPick.getPropOdds());
+
+            // if possible to parlay, fetch latest odds and calculate parlay odds
+            List<BetSlipPick> picks = betService.getBetSlipPicks(userId);
+            List<String> propIds = picks.stream()
+                    .flatMap(p -> Stream.of(p.getPropId()))
+                    .collect(Collectors.toList());
+
+            PropResponseDto propOdds;
+            try {
+                ResponseEntity<PropResponseDto> response = getCurrentOdds(propIds);
+                if (!response.getStatusCode().is2xxSuccessful()) {
+                    return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+                propOdds = response.getBody();
+            } catch (RestClientException e) {
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            String parlayOdds = calculateParlayOdds(propOdds.getProps());
+            return new ResponseEntity<>(new BetSlipPostResponseDto(parlayOdds), HttpStatus.CREATED);
+        } finally {
+            // release lock
+            lock.unlock();
+        }
+    }
+
+    private Bet createBet(String userId, Wager wager, String type) {
+        Bet bet = new Bet(null, null, type, userId, wager.getAmount());
+        return betService.saveBet(bet);
+    }
+
+    private void createLeg(Prop prop, Bet createdBet) {
+        Leg leg = new Leg(null, createdBet, prop.getId(), prop.getPropValue(), prop.getOdds());
+        betService.saveLeg(leg);
+    }
+
+    private String calculateParlayOdds(List<Prop> props) {
+        // determine if parlay is possible
+        // calculate parlay odds if so
+        return "TODO";
+    }
+
+    private ResponseEntity<PropResponseDto> getCurrentOdds(List<String> propIds) throws RestClientException {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        PropQueryDto query = new PropQueryDto(propIds);
+        HttpEntity<PropQueryDto> requestEntity = new HttpEntity<>(query, headers);
+
+        return restTemplate.exchange(
+                "http://localhost:8080/odds/query",
+                HttpMethod.POST,
+                requestEntity,
+                PropResponseDto.class);
     }
 }
