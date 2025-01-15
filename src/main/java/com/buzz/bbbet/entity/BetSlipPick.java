@@ -1,16 +1,14 @@
 package com.buzz.bbbet.entity;
 
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 @Entity
 public class BetSlipPick {
 
-    @Id
-    private String userId;  // FK into user table
-
-    @Id
-    private String propId;  // FK into props table
+    @EmbeddedId
+    private BetSlipPickId id;
 
     // These are the latest prop value and odds acknowledged by the
     // user, must match current values at submit time.
@@ -24,27 +22,18 @@ public class BetSlipPick {
 
     public BetSlipPick() { }
 
-    public BetSlipPick(String userId, String propId, String ackPropValue, Integer ackOdds) {
-        this.userId = userId;
-        this.propId = propId;
+    public BetSlipPick(BetSlipPickId id, String ackPropValue, Integer ackOdds) {
+        this.id = id;
         this.ackPropValue = ackPropValue;
         this.ackOdds = ackOdds;
     }
 
-    public String getUserId() {
-        return userId;
+    public BetSlipPickId getId() {
+        return id;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getPropId() {
-        return propId;
-    }
-
-    public void setPropId(String propId) {
-        this.propId = propId;
+    public void setId(BetSlipPickId id) {
+        this.id = id;
     }
 
     public String getAckPropValue() {

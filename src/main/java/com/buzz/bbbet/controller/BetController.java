@@ -38,7 +38,7 @@ public class BetController {
     }
 
     @PostMapping("/submit")
-    public ResponseEntity<Bet> postBet(@RequestBody BetSlipPlaceDto wagers) {
+    public ResponseEntity<List<Bet>> postBet(@RequestBody BetSlipPlaceDto wagers) {
         String userId = "1";
 
         // get lock on userId
@@ -52,7 +52,7 @@ public class BetController {
 
             // get current odds from events service (set up cache layer?)
             List<String> propIds = betSlipPicks.stream()
-                    .flatMap(pick -> Stream.of(pick.getPropId()))
+                    .flatMap(pick -> Stream.of(pick.getId().getPropId()))
                     .collect(Collectors.toList());
 
             Map<String, Prop> currentProps;
@@ -72,7 +72,7 @@ public class BetController {
 
             // confirm odds match
             boolean upToDate = betSlipPicks.stream().allMatch(p -> {
-                Prop match = currentProps.get(p.getPropId());
+                Prop match = currentProps.get(p.getId().getPropId());
                 if (match == null) return false;
                 return match.getOdds().equals(p.getAckOdds()) &&
                         match.getPropValue().equals(p.getAckPropValue());
@@ -85,20 +85,27 @@ public class BetController {
             // TODO assume it worked for now
 
             // write to bets db (or later, kafka queue), if fails refund funds
+            List<Bet> createdBets = new ArrayList<>();
             for (Wager wager : wagers.getWagers()) {
                 if (wager.getAmount() > 0.0) {
+                    Bet createdBet;
                     if (wager.isParlayWager()) {
-                        Bet createdBet = createBet(userId, wager, "PARLAY");
+                        int odds = calculateParlayOdds(currentProps.values());  // TODO handle null
+                        createdBet = createBet(userId, odds, wager, "PARLAY");
                         currentProps.values().forEach(prop -> createLeg(prop, createdBet));
                     } else {
-                        Bet createdBet = createBet(userId, wager, "STRAIGHT");
-                        createLeg(currentProps.get(wager.getPropId()), createdBet);
+                        Prop prop = currentProps.get(wager.getPropId());
+                        createdBet = createBet(userId, prop.getOdds(), wager, "STRAIGHT");
+                        createLeg(prop, createdBet);
                     }
+                    createdBets.add(createdBet);
                 }
             }
 
             // clear betslip
             betService.clearBetSlip(userId);
+
+            return new ResponseEntity<>(createdBets, HttpStatus.CREATED);
         } finally {
             // release lock
             lock.unlock();
@@ -121,7 +128,7 @@ public class BetController {
             // if possible to parlay, fetch latest odds and calculate parlay odds
             List<BetSlipPick> picks = betService.getBetSlipPicks(userId);
             List<String> propIds = picks.stream()
-                    .flatMap(p -> Stream.of(p.getPropId()))
+                    .flatMap(p -> Stream.of(p.getId().getPropId()))
                     .collect(Collectors.toList());
 
             PropResponseDto propOdds;
@@ -135,7 +142,7 @@ public class BetController {
                 return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
-            String parlayOdds = calculateParlayOdds(propOdds.getProps());
+            Integer parlayOdds = calculateParlayOdds(propOdds.getProps());
             return new ResponseEntity<>(new BetSlipPostResponseDto(parlayOdds), HttpStatus.CREATED);
         } finally {
             // release lock
@@ -143,20 +150,21 @@ public class BetController {
         }
     }
 
-    private Bet createBet(String userId, Wager wager, String type) {
-        Bet bet = new Bet(null, null, type, userId, wager.getAmount());
+    private Bet createBet(String userId, int odds, Wager wager, String type) {
+        Bet bet = new Bet(null, null, type, userId, wager.getAmount(), odds);
         return betService.saveBet(bet);
     }
 
     private void createLeg(Prop prop, Bet createdBet) {
-        Leg leg = new Leg(null, createdBet, prop.getId(), prop.getPropValue(), prop.getOdds());
+        Leg leg = new Leg(null, createdBet, prop.getId(), prop.getPropValue());
         betService.saveLeg(leg);
     }
 
-    private String calculateParlayOdds(List<Prop> props) {
+    private Integer calculateParlayOdds(Collection<Prop> props) {
+        // TODO
         // determine if parlay is possible
         // calculate parlay odds if so
-        return "TODO";
+        return null;
     }
 
     private ResponseEntity<PropResponseDto> getCurrentOdds(List<String> propIds) throws RestClientException {

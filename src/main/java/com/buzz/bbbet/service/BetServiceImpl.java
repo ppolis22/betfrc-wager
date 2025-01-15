@@ -2,21 +2,32 @@ package com.buzz.bbbet.service;
 
 import com.buzz.bbbet.entity.Bet;
 import com.buzz.bbbet.entity.BetSlipPick;
+import com.buzz.bbbet.entity.BetSlipPickId;
 import com.buzz.bbbet.entity.Leg;
+import com.buzz.bbbet.repo.BetSlipPickRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class BetServiceImpl implements BetService {
-    @Override
-    public void savePickToBetSlip(String userId, String propId, String propValue, String propOdds) {
 
+    private final BetSlipPickRepository betSlipPickRepository;
+
+    public BetServiceImpl(BetSlipPickRepository betSlipPickRepository) {
+        this.betSlipPickRepository = betSlipPickRepository;
+    }
+
+    @Override
+    public void savePickToBetSlip(String userId, String propId, String propValue, Integer propOdds) {
+        BetSlipPickId pickId = new BetSlipPickId(userId, propId);
+        BetSlipPick pick = new BetSlipPick(pickId, propValue, propOdds);
+        betSlipPickRepository.save(pick);
     }
 
     @Override
     public List<BetSlipPick> getBetSlipPicks(String userId) {
-        return null;
+        return betSlipPickRepository.findByIdUserId(userId);
     }
 
     @Override

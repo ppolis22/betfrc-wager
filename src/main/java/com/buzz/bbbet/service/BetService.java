@@ -7,7 +7,7 @@ import com.buzz.bbbet.entity.Leg;
 import java.util.List;
 
 public interface BetService {
-    void savePickToBetSlip(String userId, String propId, String propValue, String propOdds);
+    void savePickToBetSlip(String userId, String propId, String propValue, Integer propOdds);
     List<BetSlipPick> getBetSlipPicks(String userId);
     void clearBetSlip(String userId);
     Bet saveBet(Bet bet);

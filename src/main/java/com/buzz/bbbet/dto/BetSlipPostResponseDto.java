@@ -1,17 +1,17 @@
 package com.buzz.bbbet.dto;
 
 public class BetSlipPostResponseDto {
-    private String parlayOdds;
+    private Integer parlayOdds;
 
-    public BetSlipPostResponseDto(String parlayOdds) {
+    public BetSlipPostResponseDto(Integer parlayOdds) {
         this.parlayOdds = parlayOdds;
     }
 
-    public String getParlayOdds() {
+    public Integer getParlayOdds() {
         return parlayOdds;
     }
 
-    public void setParlayOdds(String parlayOdds) {
+    public void setParlayOdds(Integer parlayOdds) {
         this.parlayOdds = parlayOdds;
     }
 }

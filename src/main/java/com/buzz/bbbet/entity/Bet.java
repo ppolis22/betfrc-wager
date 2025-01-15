@@ -15,16 +15,18 @@ public class Bet {
 
     private String type;
     private String userId;
-    private double wager;  // better type for money?
+    private Double wager;   // better type for money?
+    private Integer odds;   // lives in Bet rather than Leg because of parlays
 
     public Bet() { }
 
-    public Bet(String id, Set<Leg> legs, String type, String userId, double wager) {
+    public Bet(String id, Set<Leg> legs, String type, String userId, Double wager, Integer odds) {
         this.id = id;
         this.legs = legs;
         this.type = type;
         this.userId = userId;
         this.wager = wager;
+        this.odds = odds;
     }
 
     public String getId() {
@@ -59,11 +61,19 @@ public class Bet {
         this.userId = userId;
     }
 
-    public double getWager() {
+    public Double getWager() {
         return wager;
     }
 
-    public void setWager(double wager) {
+    public void setWager(Double wager) {
         this.wager = wager;
+    }
+
+    public Integer getOdds() {
+        return odds;
+    }
+
+    public void setOdds(Integer odds) {
+        this.odds = odds;
     }
 }

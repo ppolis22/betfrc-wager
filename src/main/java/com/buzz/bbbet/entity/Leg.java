@@ -16,16 +16,14 @@ public class Leg {
     // foreign key into events db prop database
     private String propId;
     private String propValue;
-    private Integer odds;
 
     public Leg() { }
 
-    public Leg(String id, Bet parent, String propId, String propValue, Integer odds) {
+    public Leg(String id, Bet parent, String propId, String propValue) {
         this.id = id;
         this.parent = parent;
         this.propId = propId;
         this.propValue = propValue;
-        this.odds = odds;
     }
 
     public String getId() {
@@ -58,13 +56,5 @@ public class Leg {
 
     public void setPropValue(String propValue) {
         this.propValue = propValue;
-    }
-
-    public Integer getOdds() {
-        return odds;
-    }
-
-    public void setOdds(Integer odds) {
-        this.odds = odds;
     }
 }
