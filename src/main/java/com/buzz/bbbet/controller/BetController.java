@@ -58,7 +58,7 @@ public class BetController {
             Map<String, Prop> currentProps;
             try {
                 ResponseEntity<PropResponseDto> response = getCurrentOdds(propIds);
-                if (response.getStatusCode().is4xxClientError()) {
+                if (!response.getBody().getMissingIds().isEmpty()) {
                     return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
                 }
                 List<Prop> propsList = response.getBody().getProps();
@@ -134,7 +134,7 @@ public class BetController {
             PropResponseDto propOdds;
             try {
                 ResponseEntity<PropResponseDto> response = getCurrentOdds(propIds);
-                if (!response.getStatusCode().is2xxSuccessful()) {
+                if (!response.getBody().getMissingIds().isEmpty()) {
                     return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
                 }
                 propOdds = response.getBody();
