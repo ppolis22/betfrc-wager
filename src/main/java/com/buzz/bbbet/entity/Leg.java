@@ -19,6 +19,10 @@ public class Leg {
 
     public Leg() { }
 
+    public Leg(Bet parent, String propId, String propValue) {
+        this(null, parent, propId, propValue);
+    }
+
     public Leg(String id, Bet parent, String propId, String propValue) {
         this.id = id;
         this.parent = parent;
