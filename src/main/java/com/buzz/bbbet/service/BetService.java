@@ -1,15 +1,13 @@
 package com.buzz.bbbet.service;
 
+import com.buzz.bbbet.dto.BetSlipPlaceDto;
 import com.buzz.bbbet.entity.Bet;
-import com.buzz.bbbet.entity.BetSlipPick;
 import com.buzz.bbbet.entity.Leg;
+import com.buzz.bbbet.exception.InvalidRequestException;
 
 import java.util.List;
 
 public interface BetService {
-    void savePickToBetSlip(String userId, String propId, String propValue, Integer propOdds);
-    List<BetSlipPick> getBetSlipPicks(String userId);
-    void clearBetSlip(String userId);
-    Bet saveBet(Bet bet);
-    Leg saveLeg(Leg leg);
+    List<Bet> handleBetslipPost(BetSlipPlaceDto betslip, String userId) throws InvalidRequestException;
+    List<Bet> getBetsForUser(String userId);
 }

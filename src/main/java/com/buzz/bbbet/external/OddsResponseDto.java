@@ -2,13 +2,13 @@ package com.buzz.bbbet.external;
 
 import java.util.List;
 
-public class OddsValidateResponseDto {
+public class OddsResponseDto {
     private List<String> staleOdds;
     private List<String> missingOdds;
 
-    public OddsValidateResponseDto() { }
+    public OddsResponseDto() { }
 
-    public OddsValidateResponseDto(List<String> staleOdds, List<String> missingOdds) {
+    public OddsResponseDto(List<String> staleOdds, List<String> missingOdds) {
         this.staleOdds = staleOdds;
         this.missingOdds = missingOdds;
     }
