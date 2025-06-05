@@ -39,12 +39,14 @@ public class JwtUtils {
                 .getBody();
 
         String username = claims.getSubject();
+        String userId = claims.get("id", String.class);
         List<String> roles = claims.get("roles", List.class);
         List<GrantedAuthority> authorities = roles.stream()
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
 
-        return new UsernamePasswordAuthenticationToken(username, null, authorities);
+        JwtUserDetails userDetails = new JwtUserDetails(username, userId);
+        return new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
     }
 
     public boolean validateJwtToken(String authToken) {

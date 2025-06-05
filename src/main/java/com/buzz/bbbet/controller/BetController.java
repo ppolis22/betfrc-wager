@@ -5,8 +5,12 @@ import com.buzz.bbbet.entity.Bet;
 import com.buzz.bbbet.entity.Leg;
 import com.buzz.bbbet.exception.InvalidRequestException;
 import com.buzz.bbbet.external.OddsRequestDto;
+import com.buzz.bbbet.security.jwt.JwtUserDetails;
 import com.buzz.bbbet.service.BetService;
 import org.springframework.http.*;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -30,11 +34,11 @@ public class BetController {
     }
 
     @PostMapping("/submit")
+    @Secured({ "ROLE_USER" })
     public ResponseEntity<List<Bet>> postBet(@RequestBody BetSlipPlaceDto betslip) {
-        // TODO get userId
-        String userId = "1";
-
+        String userId = getUserId();
         Lock lock = locks.computeIfAbsent(userId, k -> new ReentrantLock());
+
         try {
             lock.lock();
 
@@ -50,5 +54,11 @@ public class BetController {
             // release lock
             lock.unlock();
         }
+    }
+
+    private String getUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        JwtUserDetails userDetails = (JwtUserDetails) auth.getPrincipal();
+        return userDetails.getId();
     }
 }
