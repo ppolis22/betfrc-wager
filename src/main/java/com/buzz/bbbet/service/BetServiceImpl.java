@@ -43,7 +43,13 @@ public class BetServiceImpl implements BetService {
             }
             for (WagerLeg wagerLeg : wager.getLegs()) {
                 if (validatedLegs.contains(wagerLeg)) continue;
-                ResponseEntity<Integer> response = getOdds(wagerLeg);
+                ResponseEntity<Integer> response;
+                try {
+                    response = getOdds(wagerLeg);
+                } catch (RestClientException e) {
+                    // TODO create new exception type for this
+                    throw new InvalidRequestException("Failed to connect to Odds server");
+                }
                 if (response.getBody() == null || !response.getBody().equals(wagerLeg.getOdds())) {
                     throw new InvalidRequestException("Wager odds have changed");
                 }
