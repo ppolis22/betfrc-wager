@@ -1,4 +1,4 @@
-package com.buzz.bbbet.entity;
+package com.buzz.betfrcwager.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -18,6 +18,10 @@ public class Leg {
     private String propValue;
 
     public Leg() { }
+
+    public Leg(Bet parent, String propId, String propValue) {
+        this(null, parent, propId, propValue);
+    }
 
     public Leg(String id, Bet parent, String propId, String propValue) {
         this.id = id;

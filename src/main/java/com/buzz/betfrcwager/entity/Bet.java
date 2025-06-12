@@ -1,4 +1,4 @@
-package com.buzz.bbbet.entity;
+package com.buzz.betfrcwager.entity;
 
 import jakarta.persistence.*;
 
@@ -13,17 +13,19 @@ public class Bet {
     @OneToMany(mappedBy = "parent")
     private Set<Leg> legs;
 
-    private String type;
     private String userId;
     private Double wager;   // better type for money?
     private Integer odds;   // lives in Bet rather than Leg because of parlays
 
     public Bet() { }
 
-    public Bet(String id, Set<Leg> legs, String type, String userId, Double wager, Integer odds) {
+    public Bet(String userId, Double wager, Integer odds) {
+        this(null, null, userId, wager, odds);
+    }
+
+    public Bet(String id, Set<Leg> legs, String userId, Double wager, Integer odds) {
         this.id = id;
         this.legs = legs;
-        this.type = type;
         this.userId = userId;
         this.wager = wager;
         this.odds = odds;
@@ -43,14 +45,6 @@ public class Bet {
 
     public void setLegs(Set<Leg> legs) {
         this.legs = legs;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public String getUserId() {

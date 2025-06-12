@@ -1,7 +1,18 @@
 version: "3.2"
 services:
-    postgres:
-        container_name: postgres_bbbet
+    betfrcwager:
+        container_name: betfrcwager
+        image: ppolis22/betfrcwager
+        environment:
+            SPRING_DATASOURCE_URL: jdbc:postgresql://betfrcwager-postgres:5432/betfrcwager
+            BUZZ_APP_ODDS_SERVICE: betfrcodds:8080
+        ports:
+            - "8081:8081"
+        networks:
+            - internal
+        restart: unless-stopped
+    betfrcwager-postgres:
+        container_name: betfrcwager-postgres
         image: postgres
         environment:
             POSTGRES_USER: buzz
@@ -12,10 +23,10 @@ services:
         ports:
             - "5433:5432"
         networks:
-            - postgres
+            - internal
         restart: unless-stopped
-    pgadmin:
-        container_name: pgadmin_bbbet
+    betfrcwager-pgadmin:
+        container_name: betfrcwager-pgadmin
         image: dpage/pgadmin4
         environment:
             PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
@@ -26,12 +37,12 @@ services:
         ports:
             - "5051:80"
         networks:
-            - postgres
+            - internal
         restart: unless-stopped
 
 networks:
-    postgres:
-        driver: bridge
+    internal:
+        external: true
 
 volumes:
     postgres:
