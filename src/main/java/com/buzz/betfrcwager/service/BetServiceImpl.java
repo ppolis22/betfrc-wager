@@ -6,12 +6,14 @@ import com.buzz.betfrcwager.dto.WagerLeg;
 import com.buzz.betfrcwager.entity.Bet;
 import com.buzz.betfrcwager.entity.Leg;
 import com.buzz.betfrcwager.exception.InvalidRequestException;
+import com.buzz.betfrcwager.exception.ServiceConnectionException;
 import com.buzz.betfrcwager.external.OddsRequestDto;
 import com.buzz.betfrcwager.repo.BetRepository;
 import com.buzz.betfrcwager.repo.LegRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -35,8 +37,38 @@ public class BetServiceImpl implements BetService {
     }
 
     @Override
-    public List<Bet> handleBetslipPost(BetSlipPlaceDto betslip, String userId) throws InvalidRequestException {
+    @Transactional(rollbackFor = Exception.class)
+    public List<Bet> handleBetslipPost(BetSlipPlaceDto betslip, String userId) throws InvalidRequestException, ServiceConnectionException {
         // verify betslip values match current odds
+        validateBetslip(betslip);
+
+        // try to deduct funds from funds service
+        Double betTotal = betslip.getWagers().stream().mapToDouble(Wager::getAmount).sum();
+        boolean didDeductFunds = deductFunds(userId, betTotal);
+
+        // write to bets db (or later, kafka queue), if fails refund funds
+        List<Bet> createdBets = new ArrayList<>();
+        for (Wager wager : betslip.getWagers()) {
+            int odds = wager.getLegs().size() > 1 ? calculateParlayOdds(wager.getLegs()) : wager.getLegs().get(0).getOdds();
+            Bet bet = new Bet(userId, wager.getAmount(), odds);
+            for (WagerLeg wagerLeg : wager.getLegs()) {
+                Leg leg = new Leg(bet, wagerLeg.getPropId(), wagerLeg.getValue());
+                bet.getLegs().add(leg);
+            }
+            bet = betRepository.save(bet);
+            createdBets.add(bet);
+        }
+
+        return createdBets;
+    }
+
+    @Override
+    public List<Bet> getBetsForUser(String userId) {
+        List<Bet> userBets = betRepository.findByUserId(userId);
+        return userBets;
+    }
+
+    private void validateBetslip(BetSlipPlaceDto betslip) throws InvalidRequestException, ServiceConnectionException {
         Set<WagerLeg> validatedLegs = new HashSet<>();
 
         // verify all wagers are valid
@@ -50,8 +82,7 @@ public class BetServiceImpl implements BetService {
                 try {
                     response = getOdds(wagerLeg);
                 } catch (RestClientException e) {
-                    // TODO create new exception type for this
-                    throw new InvalidRequestException("Failed to connect to Odds server");
+                    throw new ServiceConnectionException("Failed to connect to Odds server");
                 }
                 if (response.getBody() == null || !response.getBody().equals(wagerLeg.getOdds())) {
                     throw new InvalidRequestException("Wager odds have changed");
@@ -59,34 +90,10 @@ public class BetServiceImpl implements BetService {
                 validatedLegs.add(wagerLeg);
             }
         }
-
-        // try to deduct funds from funds service
-        Double betTotal = betslip.getWagers().stream().mapToDouble(Wager::getAmount).sum();
-        ResponseEntity<Boolean> deductFundsResponse = deductFunds(userId, betTotal);
-        if (!deductFundsResponse.getBody()) {
-            throw new InvalidRequestException("Unable to deduct funds");
-        }
-
-        // write to bets db (or later, kafka queue), if fails refund funds
-        List<Bet> createdBets = new ArrayList<>();
-        for (Wager wager : betslip.getWagers()) {
-            int odds = wager.getLegs().size() > 1 ? calculateParlayOdds(wager.getLegs()) : wager.getLegs().get(0).getOdds();
-            Bet createdBet = createBet(userId, odds, wager);
-            wager.getLegs().forEach(leg -> createLeg(leg, createdBet));
-            createdBets.add(createdBet);
-        }
-
-        return createdBets;
     }
 
-    @Override
-    public List<Bet> getBetsForUser(String userId) {
-        List<Bet> userBets = betRepository.findByUserId(userId);
-        return userBets;
-    }
-
-    private Bet createBet(String userId, int odds, Wager wager) {
-        Bet bet = new Bet(userId, wager.getAmount(), odds);
+    private Bet createBet(String userId, int odds, double amount) {
+        Bet bet = new Bet(userId, amount, odds);
         return betRepository.save(bet);
     }
 
@@ -120,8 +127,8 @@ public class BetServiceImpl implements BetService {
                 Integer.class);
     }
 
-    private ResponseEntity<Boolean> deductFunds(String userId, Double amount) {
+    private boolean deductFunds(String userId, Double amount) {
         // TODO
-        return new ResponseEntity<>(true, HttpStatus.OK);
+        return true;
     }
 }

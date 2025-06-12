@@ -13,21 +13,19 @@ public class Leg {
     @ManyToOne
     private Bet parent;
 
-    // foreign key into events db prop database
     private String propId;
     private String propValue;
+
+    @Enumerated(EnumType.STRING)
+    private BetStatus status;
 
     public Leg() { }
 
     public Leg(Bet parent, String propId, String propValue) {
-        this(null, parent, propId, propValue);
-    }
-
-    public Leg(String id, Bet parent, String propId, String propValue) {
-        this.id = id;
         this.parent = parent;
         this.propId = propId;
         this.propValue = propValue;
+        this.status = BetStatus.OPEN;
     }
 
     public String getId() {
@@ -60,5 +58,13 @@ public class Leg {
 
     public void setPropValue(String propValue) {
         this.propValue = propValue;
+    }
+
+    public BetStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(BetStatus status) {
+        this.status = status;
     }
 }

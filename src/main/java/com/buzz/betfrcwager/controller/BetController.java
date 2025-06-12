@@ -3,6 +3,7 @@ package com.buzz.betfrcwager.controller;
 import com.buzz.betfrcwager.dto.*;
 import com.buzz.betfrcwager.entity.Bet;
 import com.buzz.betfrcwager.exception.InvalidRequestException;
+import com.buzz.betfrcwager.exception.ServiceConnectionException;
 import com.buzz.betfrcwager.security.jwt.JwtUserDetails;
 import com.buzz.betfrcwager.service.BetService;
 import org.springframework.http.*;
@@ -42,6 +43,8 @@ public class BetController {
                 savedBets = betService.handleBetslipPost(betslip, userId);
             } catch (InvalidRequestException e) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            } catch (ServiceConnectionException e) {
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
             return new ResponseEntity<>(savedBets, HttpStatus.CREATED);
