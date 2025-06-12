@@ -9,6 +9,7 @@ import com.buzz.betfrcwager.exception.InvalidRequestException;
 import com.buzz.betfrcwager.external.OddsRequestDto;
 import com.buzz.betfrcwager.repo.BetRepository;
 import com.buzz.betfrcwager.repo.LegRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -21,6 +22,9 @@ public class BetServiceImpl implements BetService {
 
     private final BetRepository betRepository;
     private final LegRepository legRepository;
+
+    @Value("${buzz.app.odds-service}")
+    private String oddsService;
 
     public BetServiceImpl(
             BetRepository betRepository,
@@ -110,7 +114,7 @@ public class BetServiceImpl implements BetService {
         HttpEntity<OddsRequestDto> requestEntity = new HttpEntity<>(body, headers);
 
         return restTemplate.exchange(
-                "http://localhost:8080/props/query",
+                "http://" + oddsService + "/props/query",
                 HttpMethod.POST,
                 requestEntity,
                 Integer.class);
