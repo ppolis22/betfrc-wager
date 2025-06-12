@@ -1,4 +1,4 @@
-package com.buzz.bbbet.external;
+package com.buzz.betfrcwager.external;
 
 public class Prop {
     private String id;

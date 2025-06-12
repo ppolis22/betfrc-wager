@@ -1,8 +1,4 @@
-package com.buzz.bbbet.external;
-
-import com.buzz.bbbet.dto.WagerLeg;
-
-import java.util.List;
+package com.buzz.betfrcwager.external;
 
 public class OddsRequestDto {
     private String propId;

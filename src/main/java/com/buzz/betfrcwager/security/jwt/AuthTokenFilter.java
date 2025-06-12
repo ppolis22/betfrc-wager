@@ -1,4 +1,4 @@
-package com.buzz.bbbet.security.jwt;
+package com.buzz.betfrcwager.security.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

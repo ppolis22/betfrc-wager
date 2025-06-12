@@ -1,6 +1,6 @@
-package com.buzz.bbbet.repo;
+package com.buzz.betfrcwager.repo;
 
-import com.buzz.bbbet.entity.Bet;
+import com.buzz.betfrcwager.entity.Bet;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

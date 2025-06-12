@@ -1,9 +1,8 @@
-package com.buzz.bbbet.service;
+package com.buzz.betfrcwager.service;
 
-import com.buzz.bbbet.dto.BetSlipPlaceDto;
-import com.buzz.bbbet.entity.Bet;
-import com.buzz.bbbet.entity.Leg;
-import com.buzz.bbbet.exception.InvalidRequestException;
+import com.buzz.betfrcwager.dto.BetSlipPlaceDto;
+import com.buzz.betfrcwager.entity.Bet;
+import com.buzz.betfrcwager.exception.InvalidRequestException;
 
 import java.util.List;
 

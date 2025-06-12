@@ -1,4 +1,4 @@
-package com.buzz.bbbet.dto;
+package com.buzz.betfrcwager.dto;
 
 import java.util.List;
 

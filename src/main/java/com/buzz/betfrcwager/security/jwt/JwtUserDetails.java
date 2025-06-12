@@ -1,4 +1,4 @@
-package com.buzz.bbbet.security.jwt;
+package com.buzz.betfrcwager.security.jwt;
 
 public class JwtUserDetails {
     private String username;

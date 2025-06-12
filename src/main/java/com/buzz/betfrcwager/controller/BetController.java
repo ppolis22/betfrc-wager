@@ -1,25 +1,20 @@
-package com.buzz.bbbet.controller;
+package com.buzz.betfrcwager.controller;
 
-import com.buzz.bbbet.dto.*;
-import com.buzz.bbbet.entity.Bet;
-import com.buzz.bbbet.entity.Leg;
-import com.buzz.bbbet.exception.InvalidRequestException;
-import com.buzz.bbbet.external.OddsRequestDto;
-import com.buzz.bbbet.security.jwt.JwtUserDetails;
-import com.buzz.bbbet.service.BetService;
+import com.buzz.betfrcwager.dto.*;
+import com.buzz.betfrcwager.entity.Bet;
+import com.buzz.betfrcwager.exception.InvalidRequestException;
+import com.buzz.betfrcwager.security.jwt.JwtUserDetails;
+import com.buzz.betfrcwager.service.BetService;
 import org.springframework.http.*;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/bets")

@@ -1,4 +1,4 @@
-package com.buzz.bbbet.entity;
+package com.buzz.betfrcwager.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;

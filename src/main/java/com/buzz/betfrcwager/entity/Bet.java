@@ -1,4 +1,4 @@
-package com.buzz.bbbet.entity;
+package com.buzz.betfrcwager.entity;
 
 import jakarta.persistence.*;
 

@@ -1,4 +1,4 @@
-package com.buzz.bbbet.exception;
+package com.buzz.betfrcwager.exception;
 
 public class InvalidRequestException extends Exception {
     public InvalidRequestException() {}

@@ -1,4 +1,4 @@
-package com.buzz.bbbet.external;
+package com.buzz.betfrcwager.external;
 
 import java.util.List;
 

@@ -1,7 +1,7 @@
 version: "3.2"
 services:
     postgres:
-        container_name: postgres_bbbet
+        container_name: betfrcwager-postgres
         image: postgres
         environment:
             POSTGRES_USER: buzz
@@ -12,10 +12,10 @@ services:
         ports:
             - "5433:5432"
         networks:
-            - postgres
+            - internal
         restart: unless-stopped
     pgadmin:
-        container_name: pgadmin_bbbet
+        container_name: betfrcwager-pgadmin
         image: dpage/pgadmin4
         environment:
             PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
@@ -26,12 +26,12 @@ services:
         ports:
             - "5051:80"
         networks:
-            - postgres
+            - internal
         restart: unless-stopped
 
 networks:
-    postgres:
-        driver: bridge
+    internal:
+        external: true
 
 volumes:
     postgres:

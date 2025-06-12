@@ -1,21 +1,20 @@
-package com.buzz.bbbet.service;
+package com.buzz.betfrcwager.service;
 
-import com.buzz.bbbet.dto.BetSlipPlaceDto;
-import com.buzz.bbbet.dto.Wager;
-import com.buzz.bbbet.dto.WagerLeg;
-import com.buzz.bbbet.entity.Bet;
-import com.buzz.bbbet.entity.Leg;
-import com.buzz.bbbet.exception.InvalidRequestException;
-import com.buzz.bbbet.external.OddsRequestDto;
-import com.buzz.bbbet.repo.BetRepository;
-import com.buzz.bbbet.repo.LegRepository;
+import com.buzz.betfrcwager.dto.BetSlipPlaceDto;
+import com.buzz.betfrcwager.dto.Wager;
+import com.buzz.betfrcwager.dto.WagerLeg;
+import com.buzz.betfrcwager.entity.Bet;
+import com.buzz.betfrcwager.entity.Leg;
+import com.buzz.betfrcwager.exception.InvalidRequestException;
+import com.buzz.betfrcwager.external.OddsRequestDto;
+import com.buzz.betfrcwager.repo.BetRepository;
+import com.buzz.betfrcwager.repo.LegRepository;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class BetServiceImpl implements BetService {
