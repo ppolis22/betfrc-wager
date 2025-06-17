@@ -12,16 +12,20 @@ import com.buzz.betfrcwager.repo.BetRepository;
 import com.buzz.betfrcwager.repo.LegRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.*;
 
 @Service
 public class BetServiceImpl implements BetService {
 
+    private final RestTemplate restTemplate = new RestTemplate();
     private final BetRepository betRepository;
     private final LegRepository legRepository;
 
@@ -34,6 +38,12 @@ public class BetServiceImpl implements BetService {
     ) {
         this.betRepository = betRepository;
         this.legRepository = legRepository;
+        this.restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
+            @Override
+            public boolean hasError(ClientHttpResponse response) throws IOException {
+                return false;
+            }
+        });
     }
 
     @Override
@@ -92,16 +102,6 @@ public class BetServiceImpl implements BetService {
         }
     }
 
-    private Bet createBet(String userId, int odds, double amount) {
-        Bet bet = new Bet(userId, amount, odds);
-        return betRepository.save(bet);
-    }
-
-    private void createLeg(WagerLeg wagerLeg, Bet createdBet) {
-        Leg leg = new Leg(createdBet, wagerLeg.getPropId(), wagerLeg.getValue());
-        legRepository.save(leg);
-    }
-
     private boolean canParlayLegs(Collection<WagerLeg> legs) {
         // TODO determine if parlay is possible
         return true;
@@ -113,7 +113,6 @@ public class BetServiceImpl implements BetService {
     }
 
     private ResponseEntity<Integer> getOdds(WagerLeg wagerLeg) throws RestClientException {
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 

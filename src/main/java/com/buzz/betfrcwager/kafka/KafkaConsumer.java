@@ -21,6 +21,10 @@ public class KafkaConsumer {
     public void consumeEvent(@Payload PropResolvedEvent event) {
         logger.info("Consumed prop resolved event. PropId: " + event.getPropId() +
                 ", value: " + event.getValue() + ", state: " + event.getState());
-        betResolverService.resolveBets(event.getPropId(), event.getValue(), event.getState());
+        try {
+            betResolverService.resolveBets(event.getPropId(), event.getValue(), event.getState());
+        } catch (Exception e) {
+            logger.error("Error in settling/writing bets:", e);
+        }
     }
 }
